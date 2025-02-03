@@ -2,6 +2,7 @@ import Joi from 'joi'
 import express from 'express'
 import User from '../models/user.js'
 import { signUp } from '../validation/user.js'
+import { parseError, sessionizeUser } from '../util/helpers.js'
 
 const userRouter = express.Router()
 userRouter.post('', async (req, res) => {
@@ -14,10 +15,14 @@ userRouter.post('', async (req, res) => {
     }
 
     const newUser = new User({ username, email, password })
+    const sessionUser = sessionizeUser(newUser)
     await newUser.save()
-    res.json({ userId: newUser.id, username })
+
+    req.session.user = sessionUser
+    res.send(sessionUser)
+    console.log(req.session)
   } catch (err) {
-    res.status(400).json({ error: err.message })
+    res.status(400).send(parseError(err))
   }
 })
 
