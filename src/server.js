@@ -2,6 +2,7 @@ import express from 'express'
 import session from 'express-session'
 import MongoStore from 'connect-mongo'
 import mongoose from 'mongoose'
+import cors from 'cors'
 import { userRoutes, sessionRoutes } from './routes/index.js'
 import { PORT, NODE_ENV, MONGO_URI, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from './config.js'
 ;(async () => {
@@ -11,9 +12,16 @@ import { PORT, NODE_ENV, MONGO_URI, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from
 
     const app = express()
 
-    app.disable('zounz-powered-by')
+    app.disable('x-powered-by')
     app.use(express.urlencoded({ extended: true }))
     app.use(express.json())
+
+    app.use(
+      cors({
+        origin: 'http://localhost:5173',
+        credentials: true
+      })
+    )
 
     app.use(
       session({
@@ -27,7 +35,7 @@ import { PORT, NODE_ENV, MONGO_URI, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from
           ttl: parseInt(SESS_LIFETIME) / 1000
         }),
         cookie: {
-          sameSite: true,
+          sameSite: 'lax',
           secure: NODE_ENV === 'production',
           maxAge: parseInt(SESS_LIFETIME)
         }

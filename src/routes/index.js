@@ -1,4 +1,4 @@
-import userRoutes from './user.js'
-import sessionRoutes from './session.js'
+import userRoutes from './userRoutes.js'
+import sessionRoutes from './sessionRoutes.js'
 
 export { userRoutes, sessionRoutes }

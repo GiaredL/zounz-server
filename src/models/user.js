@@ -1,40 +1,93 @@
-import bcryptjs from 'bcryptjs'
 import mongoose from 'mongoose'
-const { compareSync, hashSync } = bcryptjs
+import bcrypt from 'bcryptjs'
 
-const UserSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      validate: {
-        validator: username => User.doesNotExist({ username }),
-        message: 'Username already exists'
-      }
+      required: true,
+      unique: true,
+      trim: true,
+      minlength: 3
     },
     email: {
       type: String,
-      validate: {
-        validator: email => User.doesNotExist({ email }),
-        message: 'Email already exists'
-      }
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true
     },
     password: {
       type: String,
-      required: true
-    }
+      required: true,
+      minlength: 8
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user'
+    },
+    profilePicture: {
+      type: String,
+      default: 'https://via.placeholder.com/150'
+    },
+    bio: {
+      type: String,
+      default: 'gotta update this'
+    },
+    location: {
+      city: {
+        type: String,
+        default: 'Springville'
+      },
+      state: {
+        type: String,
+        default: 'Utah'
+      },
+      country: {
+        type: String,
+        default: 'United States'
+      }
+    },
+    songs: [
+      {
+        title: {
+          type: String,
+          required: true
+        },
+        album: {
+          type: String,
+          required: true
+        },
+        streams: {
+          type: Number,
+          default: 0
+        },
+        audioUrl: {
+          type: String,
+          required: true
+        },
+        image: {
+          type: String,
+          required: true
+        }
+      }
+    ]
   },
-  { timestamps: true }
-)
-UserSchema.pre('save', function () {
-  if (this.isModified('password')) {
-    this.password = hashSync(this.password, 10)
+  {
+    timestamps: true
   }
+)
+
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10)
+  }
+  next()
 })
-UserSchema.statics.doesNotExist = async function (field) {
-  return (await this.where(field).countDocuments()) === 0
+
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password)
 }
-UserSchema.methods.comparePasswords = function (password) {
-  return compareSync(password, this.password)
-}
-const User = mongoose.model('User', UserSchema)
-export default User
+
+export const User = mongoose.model('User', userSchema)
