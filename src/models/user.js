@@ -35,19 +35,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'gotta update this'
     },
-    location: {
-      city: {
-        type: String,
-        default: 'Springville'
-      },
-      state: {
-        type: String,
-        default: 'Utah'
-      },
-      country: {
-        type: String,
-        default: 'United States'
-      }
+    streams: {
+      type: Number,
+      default: 0
+    },
+    city: {
+      type: String,
+      default: 'Springville'
+    },
+    state: {
+      type: String,
+      default: 'Utah'
+    },
+    country: {
+      type: String,
+      default: 'United States'
     },
     songs: [
       {

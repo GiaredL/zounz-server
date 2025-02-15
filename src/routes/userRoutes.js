@@ -1,7 +1,10 @@
 import express from 'express'
+import axios from 'axios'
 import { User } from '../models/user.js'
 
 const router = express.Router()
+
+const api = axios.create({})
 
 router.post('/signup', async (req, res) => {
   try {
@@ -39,7 +42,7 @@ router.post('/signup', async (req, res) => {
   }
 })
 
-router.get('/profile', async (req, res) => {
+router.get('/user', async (req, res) => {
   try {
     const userId = req.session.userId
     if (!userId) {
@@ -56,13 +59,39 @@ router.get('/profile', async (req, res) => {
         id: user._id,
         name: user.username,
         email: user.email,
-        location: user.location,
+        songs: user.songs,
+        bio: user.bio,
+        city: user.city,
+        state: user.state,
+        streams: user.streams || 0,
         songs: user.songs
       }
     })
   } catch (err) {
     console.error('Error fetching user:', err)
     res.status(500).json({ message: 'Error fetching user' })
+  }
+})
+
+// Get all users
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find({})
+    res.json({
+      users: users.map(user => ({
+        id: user._id,
+        name: user.username,
+        email: user.email,
+        streams: user.streams || 0,
+        bio: user.bio,
+        city: user.city,
+        state: user.state,
+        songs: user.songs
+      }))
+    })
+  } catch (err) {
+    console.error('Error fetching users:', err)
+    res.status(500).json({ message: 'Error fetching users' })
   }
 })
 
