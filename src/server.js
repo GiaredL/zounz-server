@@ -15,6 +15,7 @@ import { PORT, NODE_ENV, MONGO_URI, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from
     app.disable('x-powered-by')
     app.use(express.urlencoded({ extended: true }))
     app.use(express.json())
+    app.use('/uploads', express.static('uploads'))
 
     app.use(
       cors({
