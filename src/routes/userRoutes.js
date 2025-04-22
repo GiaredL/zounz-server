@@ -1,121 +1,87 @@
-import express from 'express'
-import axios from 'axios'
-import { User } from '../models/user.js'
-import multer from 'multer'
+import express from "express";
+import multer from "multer";
+import { UserService } from "../services/UserService.js";
+import { UserRepository } from "../repositories/UserRepository.js";
 
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({ dest: "uploads/" });
+const router = express.Router();
 
-const router = express.Router()
+// Initialize repository and service
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
 
-const api = axios.create({})
-
-router.post('/signup', async (req, res) => {
+router.post("/signup", async (req, res) => {
   try {
-    const { username, email, password } = req.body
+    const { username, email, password } = req.body;
+    const user = await userService.signup({ username, email, password });
 
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    })
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: 'Username or email already exists'
-      })
-    }
-
-    const user = new User({
-      username,
-      email,
-      password
-    })
-
-    await user.save()
-
-    req.session.userId = user._id
+    req.session.userId = user._id;
 
     res.status(201).json({
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
-      }
-    })
-  } catch (err) {
-    res.status(500).json({ message: 'Error creating user' })
-  }
-})
-
-router.get('/user', async (req, res) => {
-  try {
-    const userId = req.session.userId
-    if (!userId) {
-      return res.status(401).json({ message: 'Not authenticated' })
-    }
-
-    const user = await User.findById(userId)
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' })
-    }
-
-    res.json({
-      user: {
-        id: user._id,
-        name: user.username,
         email: user.email,
-        songs: user.songs,
-        bio: user.bio,
-        city: user.city,
-        state: user.state,
-        streams: user.streams || 0,
-        songs: user.songs
-      }
-    })
+      },
+    });
   } catch (err) {
-    console.error('Error fetching user:', err)
-    res.status(500).json({ message: 'Error fetching user' })
+    res.status(400).json({ message: err.message || "Error creating user" });
   }
-})
+});
 
-router.post('/image', upload.single('file'), async (req, res) => {
+router.get("/user", async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const user = await userService.getUserProfile(userId);
+    res.json({ user });
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ message: err.message || "Error fetching user" });
+  }
+});
+
+router.post("/image", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' })
+      return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // You can access the file details through req.file
     res.status(200).json({
-      message: 'Image uploaded successfully',
+      message: "Image uploaded successfully",
       file: {
         filename: req.file.filename,
-        path: req.file.path
-      }
-    })
+        path: req.file.path,
+      },
+    });
   } catch (err) {
-    console.error('Error uploading image:', err)
-    res.status(500).json({ message: 'Error uploading image' })
+    console.error("Error uploading image:", err);
+    res.status(500).json({ message: "Error uploading image" });
   }
-})
+});
 
-// Get all users
-router.get('/users', async (req, res) => {
+router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({})
-    res.json({
-      users: users.map(user => ({
-        id: user._id,
-        name: user.username,
-        email: user.email,
-        streams: user.streams || 0,
-        bio: user.bio,
-        city: user.city,
-        state: user.state,
-        songs: user.songs
-      }))
-    })
+    const users = await userService.getAllUsers();
+    res.json({ users });
   } catch (err) {
-    console.error('Error fetching users:', err)
-    res.status(500).json({ message: 'Error fetching users' })
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: err.message || "Error fetching users" });
   }
-})
+});
 
-export default router
+router.get("/users/search", async (req, res) => {
+  try {
+    const searchTerm = req.query.term;
+    const users = await userService.searchUsers(searchTerm);
+    res.json({ users });
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: error.message || "Error searching users" });
+  }
+});
+
+export default router;
