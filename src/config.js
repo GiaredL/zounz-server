@@ -1,0 +1,9 @@
+export const {
+  PORT = 5000,
+  NODE_ENV = 'development',
+  MONGO_URI = 'mongodb+srv://giaredmati:qJwdRX6O01fKqy3S@brainsmoothies.rbueu.mongodb.net/?retryWrites=true&w=majority&appName=brainsmoothies',
+  SESS_NAME = 'sid',
+  SESS_SECRET = 'secret!session',
+  SESS_LIFETIME = 1000 * 60 * 60 * 24,
+  AUTH_KEY = 'ee1xhyNnlrm62cdlBa1G7HKzWWhyKNiytb6SQJQqNaVvJMtMeonR6gzyQGMKAescQ0UPGEmZDHd2jm9mazgtubnJi8KSd33iCePOBJK7zwWK1SKfjsGzbKVu028gzfDi'
+} = process.env
