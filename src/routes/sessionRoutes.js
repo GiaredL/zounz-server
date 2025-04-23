@@ -25,13 +25,20 @@ router.post("/signin", async (req, res) => {
       `Login successful: setting session for user ${userName}, ID: ${user._id}, session ID: ${req.session.id}`
     );
 
-    res.json({
-      user: {
-        id: user._id,
-        username: user.username,
-        name: user.username,
-        email: user.email,
-      },
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).json({ message: "Error saving session" });
+      }
+
+      res.json({
+        user: {
+          id: user._id,
+          username: user.username,
+          name: user.username,
+          email: user.email,
+        },
+      });
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -59,6 +66,7 @@ router.get("/check", async (req, res) => {
   try {
     console.log(`Session check. Session ID: ${req.session.id}`);
     console.log("Session data:", req.session);
+    console.log("Cookies received:", req.headers.cookie);
 
     if (req.session.userId) {
       console.log(`Finding user with ID: ${req.session.userId}`);
@@ -77,11 +85,11 @@ router.get("/check", async (req, res) => {
         });
       } else {
         console.log(`User not found for session ID: ${req.session.id}`);
-        res.json({ authenticated: false });
+        res.json({ authenticated: false, reason: "user_not_found" });
       }
     } else {
       console.log("No user ID in session");
-      res.json({ authenticated: false });
+      res.json({ authenticated: false, reason: "no_session" });
     }
   } catch (err) {
     console.error("Session check error:", err);
