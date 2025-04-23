@@ -63,8 +63,8 @@ import {
           ttl: parseInt(SESS_LIFETIME) / 1000,
         }),
         cookie: {
-          sameSite: NODE_ENV === "production" ? "none" : "lax",
-          secure: NODE_ENV === "production",
+          sameSite: "none",
+          secure: true,
           maxAge: parseInt(SESS_LIFETIME),
           httpOnly: true,
           path: "/",
