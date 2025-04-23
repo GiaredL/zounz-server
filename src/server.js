@@ -47,6 +47,7 @@ import {
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
+      exposedHeaders: ["set-cookie"],
     };
 
     app.use(cors(corsOptions));
@@ -57,14 +58,15 @@ import {
         secret: SESS_SECRET,
         saveUninitialized: false,
         resave: false,
+        rolling: true,
         store: MongoStore.create({
           mongoUrl: MONGO_URI,
           collectionName: "sessions",
           ttl: parseInt(SESS_LIFETIME) / 1000,
         }),
         cookie: {
-          sameSite: NODE_ENV === "production" ? "none" : "lax",
-          secure: NODE_ENV === "production",
+          sameSite: "none",
+          secure: true,
           maxAge: parseInt(SESS_LIFETIME),
           httpOnly: true,
           path: "/",

@@ -57,32 +57,29 @@ router.post("/signout", (req, res) => {
 
 router.get("/check", async (req, res) => {
   try {
-    console.log(`Session check. Session ID: ${req.session.id}`);
-    console.log("Session data:", req.session);
-
-    if (req.session.userId) {
-      console.log(`Finding user with ID: ${req.session.userId}`);
-      const user = await User.findById(req.session.userId);
-
-      if (user) {
-        console.log(`User authenticated: ${user.username}`);
-        res.json({
-          authenticated: true,
-          user: {
-            id: user._id,
-            username: user.username,
-            name: user.username,
-            email: user.email,
-          },
-        });
-      } else {
-        console.log(`User not found for session ID: ${req.session.id}`);
-        res.json({ authenticated: false });
-      }
-    } else {
-      console.log("No user ID in session");
-      res.json({ authenticated: false });
+    if (!req.session || !req.session.userId) {
+      return res.json({ authenticated: false });
     }
+
+    const user = await User.findById(req.session.userId);
+    if (!user) {
+      return res.json({ authenticated: false });
+    }
+
+    res.json({
+      authenticated: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        name: user.username,
+        email: user.email,
+        state: user.state || "",
+        city: user.city || "",
+        streams: user.streams || 0,
+        bio: user.bio || "",
+        image: user.image || "",
+      },
+    });
   } catch (err) {
     console.error("Session check error:", err);
     res.status(500).json({ message: "Server error" });
