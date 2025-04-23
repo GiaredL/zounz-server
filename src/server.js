@@ -38,12 +38,7 @@ import {
               "http://localhost:3000",
               "http://localhost",
             ]
-          : [
-              "http://localhost:5173",
-              "http://localhost:5174",
-              "http://localhost:3000",
-              "http://localhost",
-            ],
+          : "http://localhost:5173",
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
@@ -63,11 +58,12 @@ import {
           ttl: parseInt(SESS_LIFETIME) / 1000,
         }),
         cookie: {
-          sameSite: NODE_ENV === "production" ? "none" : "lax",
+          sameSite: "lax",
           secure: NODE_ENV === "production",
           maxAge: parseInt(SESS_LIFETIME),
           httpOnly: true,
           path: "/",
+          domain: NODE_ENV === "production" ? ".54.241.113.130" : "localhost",
         },
       })
     );
