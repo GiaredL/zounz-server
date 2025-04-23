@@ -33,8 +33,12 @@ import {
               "https://d15xwmpj8a8ch7.cloudfront.net",
               "http://54.241.113.130:5000",
               "https://54.241.113.130:5000",
+              "http://localhost:5173",
+              "http://localhost:5174",
+              "http://localhost:3000",
+              "http://localhost",
             ]
-          : "http://localhost:5173",
+          : "*", // Allow all origins in development
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
