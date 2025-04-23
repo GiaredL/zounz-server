@@ -24,18 +24,23 @@ import {
     app.use(express.json());
     app.use("/uploads", express.static("uploads"));
 
-    app.use(
-      cors({
-        origin:
-          NODE_ENV === "production"
-            ? [
-                "http://d15xwmpj8a8ch7.cloudfront.net",
-                "https://d15xwmpj8a8ch7.cloudfront.net",
-              ]
-            : "http://localhost:5173",
-        credentials: true,
-      })
-    );
+    // Configure CORS
+    const corsOptions = {
+      origin:
+        NODE_ENV === "production"
+          ? [
+              "http://d15xwmpj8a8ch7.cloudfront.net",
+              "https://d15xwmpj8a8ch7.cloudfront.net",
+              "http://54.241.113.130:5000",
+              "https://54.241.113.130:5000",
+            ]
+          : "http://localhost:5173",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    };
+
+    app.use(cors(corsOptions));
 
     app.use(
       session({
