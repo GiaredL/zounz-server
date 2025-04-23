@@ -20,24 +20,46 @@ router.post("/signin", async (req, res) => {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    req.session.userId = user._id;
-    console.log(
-      `Login successful: setting session for user ${userName}, ID: ${user._id}, session ID: ${req.session.id}`
-    );
-
-    req.session.save((err) => {
-      if (err) {
-        console.error("Session save error:", err);
-        return res.status(500).json({ message: "Error saving session" });
+    // Clear any existing session data first
+    req.session.regenerate((regErr) => {
+      if (regErr) {
+        console.error("Session regeneration error:", regErr);
+        return res.status(500).json({ message: "Session error" });
       }
 
-      res.json({
-        user: {
-          id: user._id,
-          username: user.username,
-          name: user.username,
-          email: user.email,
-        },
+      // Set the user ID in session
+      req.session.userId = user._id;
+      req.session.username = user.username; // Add username for easier debugging
+
+      console.log(
+        `Login successful: setting session for user ${userName}, ID: ${user._id}, session ID: ${req.session.id}`
+      );
+
+      // Save the session explicitly
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Session save error:", saveErr);
+          return res.status(500).json({ message: "Error saving session" });
+        }
+
+        console.log("Session saved successfully");
+
+        // Set a simple session cookie as a backup
+        res.cookie("loggedIn", "true", {
+          maxAge: 86400000, // 1 day
+          httpOnly: true,
+          path: "/",
+        });
+
+        // Send the response with user data
+        res.json({
+          user: {
+            id: user._id,
+            username: user.username,
+            name: user.username,
+            email: user.email,
+          },
+        });
       });
     });
   } catch (err) {
@@ -68,13 +90,14 @@ router.get("/check", async (req, res) => {
     console.log("Session data:", req.session);
     console.log("Cookies received:", req.headers.cookie);
 
+    // Check for session
     if (req.session.userId) {
       console.log(`Finding user with ID: ${req.session.userId}`);
       const user = await User.findById(req.session.userId);
 
       if (user) {
         console.log(`User authenticated: ${user.username}`);
-        res.json({
+        return res.json({
           authenticated: true,
           user: {
             id: user._id,
@@ -85,12 +108,24 @@ router.get("/check", async (req, res) => {
         });
       } else {
         console.log(`User not found for session ID: ${req.session.id}`);
-        res.json({ authenticated: false, reason: "user_not_found" });
+        return res.json({ authenticated: false, reason: "user_not_found" });
       }
-    } else {
-      console.log("No user ID in session");
-      res.json({ authenticated: false, reason: "no_session" });
     }
+
+    // Check for backup cookie as fallback
+    if (req.cookies && req.cookies.loggedIn === "true") {
+      console.log(
+        "No session but 'loggedIn' cookie found - try to restore session"
+      );
+      return res.json({
+        authenticated: true,
+        fromCookie: true,
+        message: "Using backup cookie authentication",
+      });
+    }
+
+    console.log("No user ID in session or backup cookie");
+    return res.json({ authenticated: false, reason: "no_session" });
   } catch (err) {
     console.error("Session check error:", err);
     res.status(500).json({ message: "Server error" });

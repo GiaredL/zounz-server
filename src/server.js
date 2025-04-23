@@ -3,6 +3,7 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { userRoutes, sessionRoutes } from "./routes/index.js";
 import {
   PORT,
@@ -22,6 +23,7 @@ import {
     app.disable("x-powered-by");
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
+    app.use(cookieParser());
     app.use("/uploads", express.static("uploads"));
 
     // Configure CORS
@@ -63,11 +65,12 @@ import {
           ttl: parseInt(SESS_LIFETIME) / 1000,
         }),
         cookie: {
-          sameSite: NODE_ENV === "production" ? "none" : "lax",
-          secure: NODE_ENV === "production",
+          sameSite: "lax",
+          secure: false,
           maxAge: parseInt(SESS_LIFETIME),
           httpOnly: true,
           path: "/",
+          domain: undefined,
         },
       })
     );
