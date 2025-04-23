@@ -1,67 +1,92 @@
-import express from 'express'
-import { User } from '../models/user.js'
-const router = express.Router()
+import express from "express";
+import { User } from "../models/user.js";
+const router = express.Router();
 
-router.post('/signin', async (req, res) => {
+router.post("/signin", async (req, res) => {
   try {
-    const { userName, password } = req.body
-    const user = await User.findOne({ username: userName })
+    const { userName, password } = req.body;
+    console.log(`Login attempt for user: ${userName}`);
+
+    const user = await User.findOne({ username: userName });
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid username or password' })
+      console.log(`Login failed: user ${userName} not found`);
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    const isValidPassword = await user.comparePassword(password)
+    const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid username or password' })
+      console.log(`Login failed: invalid password for user ${userName}`);
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    req.session.userId = user._id
+    req.session.userId = user._id;
+    console.log(
+      `Login successful: setting session for user ${userName}, ID: ${user._id}, session ID: ${req.session.id}`
+    );
 
     res.json({
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
-      }
-    })
+        name: user.username,
+        email: user.email,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' })
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-})
+});
 
-router.post('/signout', (req, res) => {
-  req.session.destroy(err => {
+router.post("/signout", (req, res) => {
+  console.log(
+    `Signout request. Session ID: ${req.session.id}, User ID: ${req.session.userId}`
+  );
+
+  req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ message: 'Could not sign out' })
+      console.error("Signout error:", err);
+      return res.status(500).json({ message: "Could not sign out" });
     }
-    res.clearCookie(process.env.SESS_NAME)
-    res.json({ message: 'Signed out successfully' })
-  })
-})
+    console.log("Session destroyed successfully");
+    res.clearCookie(process.env.SESS_NAME);
+    res.json({ message: "Signed out successfully" });
+  });
+});
 
-router.get('/check', async (req, res) => {
+router.get("/check", async (req, res) => {
   try {
+    console.log(`Session check. Session ID: ${req.session.id}`);
+    console.log("Session data:", req.session);
+
     if (req.session.userId) {
-      const user = await User.findById(req.session.userId)
+      console.log(`Finding user with ID: ${req.session.userId}`);
+      const user = await User.findById(req.session.userId);
+
       if (user) {
+        console.log(`User authenticated: ${user.username}`);
         res.json({
           authenticated: true,
           user: {
             id: user._id,
             username: user.username,
-            email: user.email
-          }
-        })
+            name: user.username,
+            email: user.email,
+          },
+        });
       } else {
-        res.json({ authenticated: false })
+        console.log(`User not found for session ID: ${req.session.id}`);
+        res.json({ authenticated: false });
       }
     } else {
-      res.json({ authenticated: false })
+      console.log("No user ID in session");
+      res.json({ authenticated: false });
     }
   } catch (err) {
-    res.status(500).json({ message: 'Server error' })
+    console.error("Session check error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-})
+});
 
-export default router
+export default router;

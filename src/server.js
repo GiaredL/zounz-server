@@ -66,6 +66,8 @@ import {
           sameSite: NODE_ENV === "production" ? "none" : "lax",
           secure: NODE_ENV === "production",
           maxAge: parseInt(SESS_LIFETIME),
+          httpOnly: true,
+          path: "/",
         },
       })
     );
