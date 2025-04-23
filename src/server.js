@@ -68,7 +68,8 @@ import {
           sameSite: "none",
           secure: true,
           maxAge: parseInt(SESS_LIFETIME),
-          httpOnly: true,
+          // httpOnly: true,
+          domain: "http://54.241.113.130:5000/api";
           path: "/",
         },
       })
